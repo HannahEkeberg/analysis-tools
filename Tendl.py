@@ -6,8 +6,9 @@ from urllib.request import urlopen
 
 class Tendl:
 
-    def __init__(self, target):
+    def __init__(self, target, beamParticle):
         self.target = target # target = {"Ir191": 0.373, "Ir193": 0.627}
+        self.beamParticle = beamParticle
 
     def tendlDeuteronData(self, productZ, productA, isomerLevel = None):
         targetFoil = list(self.target.keys())[0][0:2]
@@ -31,6 +32,27 @@ class Tendl:
         # print(Cs)
         return E, Cs
 
+    def tendlData(self, productZ, productA, isomerLevel=None):
+        targetFoil = list(self.target.keys())[0][0:2]
+        product = self.product(productZ, productA)
+        fileEnding = self.tendlFileEnding(isomerLevel)
+        E = []
+        Cs = []
+        for t in self.target.keys():
+            data = self.retrieveTendlDataFromUrl(
+                self.tendlUrl(targetFoil, t, product, fileEnding), t
+            )
+            if isinstance(data[0], np.ndarray):
+                E.append(data[0])
+                Cs.append(data[1])
+        if len(E)==0 or len(Cs)==0:
+            "TENDL: No data found for target: " + targetFoil + " for productZ" + productZ + "and product A: " + productA
+            # raise Exception
+        CsSummed = sum(Cs)
+        E = E[0]
+        E, Cs = Tools().interpolate(E, CsSummed)
+        return E, Cs
+
     def plotTendl23(self, productZ, productA, isomerLevel = None): #, feeding = None, branchingRatio = None, parentIsomerLevel = None):
         # try:
         E, Cs = self.tendlDeuteronData(productZ, productA, isomerLevel)
@@ -42,17 +64,15 @@ class Tendl:
         # print("Unable to retrive tendl data, perhaps no internet connection?")
 
     def plotTendl23Unique(self, productZ, productA, isomerLevel = None, color=None, lineStyle=None, label=None):
-        E, Cs = self.tendlDeuteronData(productZ, productA, isomerLevel)
-        plt.plot(E, Cs, label=label, linestyle=lineStyle, color=color)
         try:
-            # if color==None:
-            #     color='blue'
-            # if lineStyle==None:
-            #     linestyle='--'
-            # if label==None:
-            #     label = 'TENDL-2023'
-            E, Cs = self.tendlDeuteronData(productZ, productA, isomerLevel)
-            plt.plot(E, Cs, label=label, linestyle=linestyle, color=color)
+            if color==None:
+                color='blue'
+            if lineStyle==None:
+                lineStyle='--'
+            if label==None:
+                label = 'TENDL-2023'
+            E, Cs = self.tendlData(productZ, productA, isomerLevel)
+            plt.plot(E, Cs, label=label, linestyle=lineStyle, color=color)
         except:
             print("Unable to retrive tendl data, perhaps no internet connection?")
 
@@ -87,18 +107,6 @@ class Tendl:
         except:
             print("Unable to retrive tendl data, perhaps no internet connection?")
 
-
-
-
-
-    # def correctForFeeding(self, productZ, productA, betaFeeding, branchingRatio, parentIsomerLevel):
-    #     if (betaFeeding  == 'beta+'):
-    #         parentZ = str(int(productZ)+1); parentA = productA
-    #     elif (betaFeeding == 'beta-'):
-    #         parentZ = str(int(productZ)-1); parentA = productA
-    #     E, Cs = self.tendlDeuteronData(parentZ, parentA, parentIsomerLevel)
-        # return E, Cs*branchingRatio
-
     def product(self, productZ, productA):
         if len(productZ) <= 2:
             productZ = '0' + productZ
@@ -118,12 +126,33 @@ class Tendl:
         + '/tables/residual/rp'
         + product + fileEnding)
 
+    def tendlUrl(self, targetFoil, target, product, fileEnding):
+        if self.beamParticle == 'deuteron':
+            beam_file = 'deuteron_file/'
+        elif self.beamParticle == 'proton':
+            beam_file = 'proton_file/'
+        elif self.beamParticle == 'alpha':
+            beam_file = 'alpha_file/'
+        else:
+            raise Exception("Invalid beam particle. Must be deuteron or proton. Was: " + self.beamParticle)
+        target = self.formatTargetLength(targetFoil, target)
+        return ('https://tendl.web.psi.ch/tendl_2023/' 
+        + beam_file
+        + targetFoil + '/' + target
+        + '/tables/residual/rp'
+        + product + fileEnding)
+
+    def formatTargetLength(self, targetFoil, targetIsotope):
+        # Cu65 --> Cu065. Ir193=Ir193
+        isotopeNumber = targetIsotope[len(targetFoil):]
+        formattedIsotopeNumber = isotopeNumber if len(isotopeNumber)==3 else '0' + isotopeNumber
+        return targetFoil + formattedIsotopeNumber
+
     def tendlFileEnding(self, isomerLevel=None):
         return '.tot' if isomerLevel==None else '.L' + isomerLevel
 
     def retrieveTendlDataFromUrl(self, url, target):
         try:
-            print(url)
             tendlData = requests.get(url).text.split("\n")[27:] # skipping 27 first lines in tendl file
             tendlData = np.genfromtxt(tendlData)
             abundance = self.target[target]
@@ -133,7 +162,6 @@ class Tendl:
         except:
             print('Unable to retrieve tendlData from url: ' + url)
             return 0,0
-            # raise Exception("Unable to retrieve tendl data from url: " + url)
 
     def retrieveDataFromUrlWithNumpy(self, url):
         tendl_data = np.genfromtxt(urlopen("https://tendl.web.psi.ch/tendl_2023/deuteron_file/Ir/Ir193/tables/residual/rp078193.L05"), delimiter=" ")
