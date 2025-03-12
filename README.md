@@ -39,15 +39,15 @@ pip install .
 
 Pandas tools.
 
-Tendl
+Tendl:
 
-findGammas:
+findGammas: Need to provide a list of isotopes that are of interest in curie notation
 	Tool to:
-- match by specific gamma.
-- find all gammas in pre-defined list of isotopes
-- find all gammas for specified isotope
-- order all pre-defined isotopes by half life
-- save csv. All methods above returns data frames which can be saved as csv.
+- matchByGamma(gammaLine, gammaLineTolerance=0.5, minIntensity=None, xrays=False) --> match by specific gamma, find all mathcing for different nuclei. Must provide list in initialization
+- findAllGammas(minIntensity=None, xrays=False) --> find all gammas in pre-defined list of isotopes
+- findGammasSpecificIsotope(iso, minIntensity=None, xrays=None) --> find all gammas for specified isotope. Not necessary to pre-define isotopes. Isotope (iso) must have curie notation
+- orderIsotopesByHalfLife() --> order all pre-defined isotopes by half life
+- saveCsv(dataframe, filename, directory=None) --> save csv. All methods above returns data frames which can be saved as csv.
 	
 countingTimes: Need to provide foil ('SC'), target {'Sc45': 1.0}, numberOftargetNuclei (ask chat gpt, for instance specify area and thickness of target), beam energy (30 #MeV) and beamParticle ('proton'). 
 Assuming: efficiency data from hpge detector in room 131 at 5 cm. assuming beam current 100 nA, irradiation time 2 hrs, desired number of counts is 10 000. 
