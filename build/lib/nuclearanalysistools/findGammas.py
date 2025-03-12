@@ -20,9 +20,10 @@ class AnalyzeGammas:
                     possibleGammas.append([iso, str(energy), str(intensity), half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
         data = pd.DataFrame(possibleGammas, columns=['Isotope', 'Energy', 'Intensity', 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Half life (s)')
         if not data.empty:
-            return data
+            print(data)
         else:
-            raise Exception('No matching decay gammas for: ' + str(gammaLine) + ' (+/- ' + str(gammaLineTolerance) + ') keV')
+            print('No matching decay gammas for: ' + str(gammaLine) + ' (+/- ' + str(gammaLineTolerance) + ') keV')
+        return data
 
     def findAllGammas(self, minIntensity=None, xrays=False):
         gammas = [] # ('63Zn', thalf, energy, intensity)
@@ -36,6 +37,7 @@ class AnalyzeGammas:
                     gammas.append([iso, energy, intensity, half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
         data = pd.DataFrame(
             gammas, columns=['Isotope', 'Energy', 'Intensity', 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Energy')
+        print(data)
         return data
 
     def findGammasSpecificIsotope(self, iso, minIntensity=None, xrays=None):
@@ -45,10 +47,11 @@ class AnalyzeGammas:
         gammaLines = isotope.gammas(I_lim=minIntensity, xrays=xrays)#, dE_511=1.0)
         if not gammaLines.empty:
             for i in range(len(gammaLines)):
-                energy = gammaLines.at[i, 'energy']; intensity=gammaLines.at[i, 'intensity'], unc_intensity=gammaLines.at[i, 'unc_intensity']
-                gammas.append([iso, energy, intensity, unc_intensity, half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
+                energy = gammaLines.at[i, 'energy']; intensity=gammaLines.at[i, 'intensity']
+                gammas.append([iso, energy, intensity, half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
         data = pd.DataFrame(
-            gammas, columns=['Isotope', 'Energy', 'Intensity', 'Unc intensity' 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Intensity', ascending=False)
+            gammas, columns=['Isotope', 'Energy', 'Intensity', 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Intensity', ascending=False)
+        print(data)
         return data
 
     def orderIsotopesByHalfLife(self):
@@ -59,6 +62,7 @@ class AnalyzeGammas:
             isotopeInfo.append([iso, half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
         data = pd.DataFrame(
             isotopeInfo, columns=['Isotope', 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Half life (s)')
+        print(data)
         return data
 
     def saveCsv(self, dataframe, filename, directory=None):
@@ -74,25 +78,25 @@ class AnalyzeGammas:
 
 #EXAMPLE
 
-# listOfPossibleProductsNatCu= ['61ZN', '62ZN', '63ZN', '65ZN', '60CU', '61CU', 
-#                             '62CU', '64CU', '56NI', '57NI', '63NI', '65NI',
-#                             '55CO', '56CO', '57CO', 'CO-58m', 'CO-58g', '60CO',
-#                             '61CO', '55FE', '59FE']
+listOfPossibleProductsNatCu= ['61ZN', '62ZN', '63ZN', '65ZN', '60CU', '61CU', 
+                            '62CU', '64CU', '56NI', '57NI', '63NI', '65NI',
+                            '55CO', '56CO', '57CO', 'CO-58m', 'CO-58g', '60CO',
+                            '61CO', '55FE', '59FE']
 
-# listOfPossibleProductsNatIr= ['PT-193m', '191PT', '189PT', '188PT', '187PT', '186PT', 
-#                             'IR-194m', 'IR-194g', 'IR-192m2', 'IR-192m1', 'IR-192g', 'IR-190m2',
-#                             'IR-190m1', 'IR-190g', '189IR', '188IR', 'IR-187g', '193OS',
-#                             '191OS']
+listOfPossibleProductsNatIr= ['PT-193m', '191PT', '189PT', '188PT', '187PT', '186PT', 
+                            'IR-194m', 'IR-194g', 'IR-192m2', 'IR-192m1', 'IR-192g', 'IR-190m2',
+                            'IR-190m1', 'IR-190g', '189IR', '188IR', 'IR-187g', '193OS',
+                            '191OS']
 
-# listOfPossibleProductsNatFe= ['55CO', '56CO', '57CO', 'CO-58m', 'CO-58g', '60CO',
-#                             '61CO', '55FE', '59FE', 'FE-53m', 'FE-53g', '52FE',
-#                             '56MN', '54MN', '53MN', 'MN-52m', 'MN-52g', '51MN',
-#                             '56CR', '55CR', '51CR', '49CR', '48CR', '52V', '49V', '48V', '47V']
+listOfPossibleProductsNatFe= ['55CO', '56CO', '57CO', 'CO-58m', 'CO-58g', '60CO',
+                            '61CO', '55FE', '59FE', 'FE-53m', 'FE-53g', '52FE',
+                            '56MN', '54MN', '53MN', 'MN-52m', 'MN-52g', '51MN',
+                            '56CR', '55CR', '51CR', '49CR', '48CR', '52V', '49V', '48V', '47V']
 
 
-# listOfPossibleProductsNatTi = ['52V', '49V', '48V', '47V','51TI', '45TI','44TI','49SC',
-#                                 '48SC', '47SC', '46SC', '44SC', '43SC',
-#                                 '49CA', '47CA', '45CA', '45K', '44K', '43K', '42K', '40K', '24NA']
+listOfPossibleProductsNatTi = ['52V', '49V', '48V', '47V','51TI', '45TI','44TI','49SC',
+                                '48SC', '47SC', '46SC', '44SC', '43SC',
+                                '49CA', '47CA', '45CA', '45K', '44K', '43K', '42K', '40K', '24NA']
 
 
 
@@ -109,10 +113,10 @@ class AnalyzeGammas:
 # ag = AnalyzeGammas(listOfPossibleProductsNatCu)
 # ag = AnalyzeGammas(listOfCalibrationSources)
 
-# ag = AnalyzeGammas(listOfPossibleProductsNatFe)
+ag = AnalyzeGammas(listOfPossibleProductsNatFe)
 
-# ag.orderIsotopesByHalfLife()
-# ag.findGammasSpecificIsotope('56CO', minIntensity=0.001, xrays=True)
+ag.orderIsotopesByHalfLife()
+ag.findGammasSpecificIsotope('56CO', minIntensity=0.001, xrays=True)
 
 
 # ag.matchByGamma(2614.0, gammaLineTolerance=2.5, minIntensity=None)

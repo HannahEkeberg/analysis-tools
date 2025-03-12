@@ -19,10 +19,10 @@ class AnalyzeGammas:
                     energy = matchedGamma_dataframe.at[i, 'energy']; intensity=matchedGamma_dataframe.at[i, 'intensity']
                     possibleGammas.append([iso, str(energy), str(intensity), half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
         data = pd.DataFrame(possibleGammas, columns=['Isotope', 'Energy', 'Intensity', 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Half life (s)')
-        if not data.empty:
-            return data
-        else:
+        if data.empty:
             raise Exception('No matching decay gammas for: ' + str(gammaLine) + ' (+/- ' + str(gammaLineTolerance) + ') keV')
+        else:
+            return data
 
     def findAllGammas(self, minIntensity=None, xrays=False):
         gammas = [] # ('63Zn', thalf, energy, intensity)
@@ -32,10 +32,10 @@ class AnalyzeGammas:
             gammaLines = isotope.gammas(I_lim=minIntensity, xrays=xrays)#, dE_511=1.0)
             if not gammaLines.empty:
                 for i in range(len(gammaLines)):
-                    energy = gammaLines.at[i, 'energy']; intensity=gammaLines.at[i, 'intensity']
-                    gammas.append([iso, energy, intensity, half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
+                    energy = gammaLines.at[i, 'energy']; intensity=gammaLines.at[i, 'intensity']; unc_intensity=gammaLines.at[i, 'unc_intensity']
+                    gammas.append([iso, energy, intensity,unc_intensity,half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
         data = pd.DataFrame(
-            gammas, columns=['Isotope', 'Energy', 'Intensity', 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Energy')
+            gammas, columns=['Isotope', 'Energy', 'Intensity', 'unc_intensity', 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Energy')
         return data
 
     def findGammasSpecificIsotope(self, iso, minIntensity=None, xrays=None):
@@ -45,10 +45,10 @@ class AnalyzeGammas:
         gammaLines = isotope.gammas(I_lim=minIntensity, xrays=xrays)#, dE_511=1.0)
         if not gammaLines.empty:
             for i in range(len(gammaLines)):
-                energy = gammaLines.at[i, 'energy']; intensity=gammaLines.at[i, 'intensity'], unc_intensity=gammaLines.at[i, 'unc_intensity']
-                gammas.append([iso, energy, intensity, unc_intensity, half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
+                energy = gammaLines.at[i, 'energy']; intensity=gammaLines.at[i, 'intensity']
+                gammas.append([iso, energy, intensity, half_life, half_life/60, half_life/(60*60), half_life/(60*60*24)])
         data = pd.DataFrame(
-            gammas, columns=['Isotope', 'Energy', 'Intensity', 'Unc intensity' 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Intensity', ascending=False)
+            gammas, columns=['Isotope', 'Energy', 'Intensity', 'Half life (s)', 'Half life (m)', 'half life (h)', 'half life (d)']).sort_values('Intensity', ascending=False)
         return data
 
     def orderIsotopesByHalfLife(self):
