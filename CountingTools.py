@@ -66,8 +66,6 @@ class Count:
     def halfLife(self, isotope):
         return ci.Isotope(isotope).half_life()
 
-    # def get
-
     def getCountingStatistics(self, isotopeDict):
         # isotopeDict --> {isotope: [[[E1, I1], [E2, I2], ...], Z, A, isomerLevel]}
         countInfo = []
